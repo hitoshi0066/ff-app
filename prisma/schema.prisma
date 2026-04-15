@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ───
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String?       @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  assignees     Assignee[]
+  appointments  Appointment[] @relation("HostAppointments")
+  createdAt     DateTime      @default(now())
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Appointment ───
+enum AppointmentStatus {
+  DRAFT
+  PENDING     // URL発行済み、回答待ち
+  CONFIRMED   // 確定済み
+  CANCELLED
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  hostId      String
+  host        User              @relation("HostAppointments", fields: [hostId], references: [id])
+  title       String?
+  guidance    String?           @db.Text
+  status      AppointmentStatus @default(DRAFT)
+  issueCode   Boolean           @default(true)
+  issueMeet   Boolean           @default(true)
+  meetUrl     String?
+  confirmedSlotId String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  timeSlots   TimeSlot[]
+  assignees   Assignee[]
+  visitors    Visitor[]
+}
+
+// ─── Time Slots ───
+enum SlotStatus {
+  AVAILABLE
+  RESERVED
+  CONFIRMED
+}
+
+model TimeSlot {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  date          DateTime    @db.Date
+  startMin      Int         // 0-1440 (minutes from midnight)
+  endMin        Int         // 0-1440
+  status        SlotStatus  @default(AVAILABLE)
+
+  votes         Vote[]
+
+  @@index([appointmentId])
+}
+
+// ─── Assignees (担当者) ───
+model Assignee {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  colorIndex    Int         @default(0)
+
+  @@unique([appointmentId, userId])
+}
+
+// ─── Visitors (来訪者) ───
+model Visitor {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  name          String
+  company       String?
+  email         String?
+  uid           String      @unique @default(cuid()) // URL用ユニークID
+  groupKey      String?     // 同じ会社のグループキー
+  hasResponded  Boolean     @default(false)
+
+  votes         Vote[]
+
+  @@index([appointmentId])
+}
+
+// ─── Votes (3社以上用) ───
+enum VoteAnswer {
+  OK        // ○
+  MAYBE     // △
+  NG        // ×
+}
+
+model Vote {
+  id          String     @id @default(cuid())
+  visitorId   String
+  visitor     Visitor    @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  timeSlotId  String
+  timeSlot    TimeSlot   @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  answer      VoteAnswer
+  createdAt   DateTime   @default(now())
+
+  @@unique([visitorId, timeSlotId])
+}

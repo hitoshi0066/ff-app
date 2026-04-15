@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+:root {
+  --brand: #00bfa5;
+  --brand-dark: #00897b;
+  --brand-light: #e0f7f3;
+}
+
+body {
+  font-family: 'Noto Sans JP', system-ui, sans-serif;
+  color: #333;
+}
