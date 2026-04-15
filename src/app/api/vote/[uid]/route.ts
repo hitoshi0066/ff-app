@@ -62,7 +62,13 @@ export async function POST(
   // Check if all visitors (grouped by company) have responded
   // Get unique group keys
   const allVisitors = appointment.visitors;
-  const groupKeys = [...new Set(allVisitors.map((v) => v.groupKey).filter(Boolean))];
+  const groupKeys = Array.from(
+    new Set(
+      allVisitors
+        .map((v) => v.groupKey)
+        .filter((gk): gk is string => gk !== null)
+    )
+  );
 
   // For each group, check if at least one visitor has responded
   const allGroupsResponded = groupKeys.every((gk) =>
