@@ -1,6 +1,12 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+function getResend(): Resend {
+  if (!resendInstance) {
+    resendInstance = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendInstance;
+}
 const fromEmail = process.env.RESEND_FROM_EMAIL || "noreply@first-friends.jp";
 const appName = process.env.NEXT_PUBLIC_APP_NAME || "First Friends App";
 
@@ -15,7 +21,7 @@ export async function sendSchedulingRequest(params: {
   hostEmail: string;
   bookingUrl: string;
 }) {
-  return resend.emails.send({
+  return getResend().emails.send({
     from: `${appName} <${fromEmail}>`,
     to: params.to,
     subject: `アポイントメント調整依頼[${params.hostCompany}]`,
@@ -37,7 +43,7 @@ export async function sendConfirmationEmail(params: {
   meetUrl: string;
 }) {
   const promises = params.to.map((email) =>
-    resend.emails.send({
+    getResend().emails.send({
       from: `${appName} <${fromEmail}>`,
       to: email,
       subject: `アポイントメントが確定しました[${params.hostCompany}]`,
@@ -56,7 +62,7 @@ export async function sendVoteCompleteNotification(params: {
   confirmUrl: string;
   appointmentTitle: string;
 }) {
-  return resend.emails.send({
+  return getResend().emails.send({
     from: `${appName} <${fromEmail}>`,
     to: params.to,
     subject: `全員の回答が揃いました - ${params.appointmentTitle}`,
