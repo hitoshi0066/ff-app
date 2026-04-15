@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { nanoid } from "nanoid";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/appointments - Create appointment
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);

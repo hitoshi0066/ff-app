@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendVoteCompleteNotification } from "@/lib/mail";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/vote/[uid] - Visitor submits votes
 export async function POST(
   req: NextRequest,

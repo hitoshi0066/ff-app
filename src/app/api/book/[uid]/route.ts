@@ -5,6 +5,8 @@ import { sendConfirmationEmail } from "@/lib/mail";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/book/[uid] - Visitor confirms a time slot
 export async function POST(
   req: NextRequest,

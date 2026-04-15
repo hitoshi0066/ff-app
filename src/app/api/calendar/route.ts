@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getEvents, getFreeBusy } from "@/lib/google-calendar";
 
+export const dynamic = "force-dynamic";
+
 // POST /api/calendar - Get events for assignees
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
